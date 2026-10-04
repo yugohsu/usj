@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="芊芊影音">
+  <meta name="theme-color" content="#ffffff">
+  <title>芊芊影音上傳分享區</title>
+  <style>
+    html, body { margin: 0; height: 100%; background: #ffffff; }
+    iframe { position: fixed; inset: 0; width: 100%; height: 100%; border: 0; }
+    .fallback { position: fixed; left: 0; right: 0; bottom: calc(10px + env(safe-area-inset-bottom)); text-align: center; font: 14px/1.4 -apple-system, "Noto Sans TC", sans-serif; pointer-events: none; }
+    .fallback a { pointer-events: auto; color: #555; }
+  </style>
+</head>
+<body>
+  <!-- allow：讓頁面裡的相機、麥克風、全螢幕、分享、複製，在嵌入狀態下也能使用 -->
+  <iframe
+    src="https://script.google.com/macros/s/AKfycbyj0wL7vHYlpACEaDXuIFHCe3lJE-A04wCBJhbT0m9MDfLDxyMcW-Vs2qa8HjZkNmYKKg/exec"
+    title="芊芊影音上傳分享區"
+    allow="camera; microphone; fullscreen; clipboard-write; web-share; autoplay"
+    referrerpolicy="no-referrer"></iframe>
+  <!-- 萬一嵌入失敗（畫面空白），底部有直接開啟的連結 -->
+  <div class="fallback"><a href="https://script.google.com/macros/s/AKfycbyj0wL7vHYlpACEaDXuIFHCe3lJE-A04wCBJhbT0m9MDfLDxyMcW-Vs2qa8HjZkNmYKKg/exec" target="_top">畫面空白？點這裡直接開啟</a></div>
+</body>
+</html>
