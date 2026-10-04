@@ -1,0 +1,39 @@
+name: usj-shows
+
+# 日本時間 07:00～22:59，每 15 分鐘抓一次今天的表演時間（GitHub 的排程用 UTC，所以寫成 22~23 與 0~13 點）
+on:
+  schedule:
+    - cron: '*/15 22-23,0-13 * * *'
+  workflow_dispatch:        # 也可以在 Actions 頁面手動按「Run workflow」
+
+permissions:
+  contents: write           # 需要把 shows.json 更新回 repo
+
+concurrency:
+  group: usj-shows
+  cancel-in-progress: true
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: 安裝瀏覽器工具
+        run: npm install --no-save puppeteer
+      - name: 抓取今天的表演時間
+        run: node scripts/fetch-shows.mjs --out shows.json
+      - name: 內容有變才提交
+        run: |
+          if [ -n "$(git status --porcelain shows.json)" ]; then
+            git config user.name "usj-bot"
+            git config user.email "usj-bot@users.noreply.github.com"
+            git add shows.json
+            git commit -m "update shows.json"
+            git push
+          else
+            echo "shows.json 沒有變動"
+          fi
