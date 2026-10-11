@@ -19,7 +19,7 @@ const SYMBOLS_RE = /^[〜～~\-から・＆&™®\s]+$/;
 export function parseEntries(lines) {
   const out = [];
   let cur = null;
-  const flush = () => { if (cur && cur.name && cur.tokens.length) out.push({ name: cur.name, text: cur.tokens.join(' ') }); cur = null; };
+  const flush = () => { if (cur && cur.name && cur.tokens.length && !/^(開始|次回|次の(公演|回)|終了|公演時間|時間|まもなく|本日)$/.test(cur.name.replace(/[\s:：]/g, ''))) out.push({ name: cur.name, text: cur.tokens.join(' ') }); cur = null; };
   for (const raw of lines) {
     const s = raw.replace(/^[-*•・]\s*/, '').replace(/^\d+\.\s*/, '').replace(/開始\s*\d{1,2}:\d{2}/g, '').trim();
     if (!s || /^\d+\.?$/.test(s)) continue;
@@ -99,15 +99,28 @@ async function main() {
   });
   let result = null, source = '';
   const problems = [];
+  let officialText = '';
   try {
-    try { const r = parseOfficialText(await pageText(browser, OFFICIAL, '時刻表'), TODAY); if (r.error) problems.push('官網：' + r.error); else { result = r; source = 'official'; } }
-    catch (e) { problems.push('官網：' + String(e.message || e).slice(0, 120)); }
+    try {
+      officialText = await pageText(browser, OFFICIAL, '時刻表');
+      const r = parseOfficialText(officialText, TODAY);
+      if (r.error) problems.push('官網：' + r.error); else { result = r; source = 'official'; }
+    } catch (e) { problems.push('官網：' + String(e.message || e).slice(0, 120)); }
     if (!result) {
       try { const r = parseFallbackText(await pageText(browser, FALLBACK, 'ショー'), TODAY); if (r.error) problems.push('備援：' + r.error); else { result = r; source = 'usjreal'; } }
       catch (e) { problems.push('備援：' + String(e.message || e).slice(0, 120)); }
     }
   } finally { await browser.close(); }
-  if (!result) { console.error('抓取失敗，不更新 ' + OUT + '：\n - ' + problems.join('\n - ')); process.exit(1); }
+  console.log('今天（日本時間）：' + TODAY);
+  if (!result) {
+    console.error('抓取失敗，不更新 ' + OUT + '：\n - ' + problems.join('\n - '));
+    // 官網讀得到但解析不出來時，印出頁面開頭的文字，方便判斷官網版面是不是改了
+    if (officialText) {
+      const head = officialText.split('\n').map((x) => x.trim()).filter(Boolean).slice(0, 80).join('\n');
+      console.error('\n===== 官網頁面文字（前 80 行，請整段複製給開發者）=====\n' + head + '\n===== 結束 =====');
+    }
+    process.exit(1);
+  }
   const next = { date: TODAY, fetched_at: new Date().toISOString(), source, shows: result.shows, operations: result.operations };
   let changed = true;
   try {
